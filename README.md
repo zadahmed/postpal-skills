@@ -70,14 +70,14 @@ You can also just ask your agent to "connect to my PostPal account" — the skil
 
 ```bash
 export POSTPAL_API_KEY=ppk_live_...
-# optional, defaults to https://postpal.live
-export POSTPAL_API_BASE_URL=https://postpal.live
+# optional, defaults to https://www.postpal.live
+export POSTPAL_API_BASE_URL=https://www.postpal.live
 ```
 
 or put it in `.postpal-agent.json` in the project root (add it to `.gitignore`):
 
 ```json
-{ "apiKey": "ppk_live_...", "apiBaseUrl": "https://postpal.live" }
+{ "apiKey": "ppk_live_...", "apiBaseUrl": "https://www.postpal.live" }
 ```
 
 Either way, the skills always verify the connection (`GET /api/v1/me`) before doing any work, and the Reddit skill additionally requires your Reddit account to be connected in PostPal (Settings → Social Accounts) before it will touch any Reddit endpoint.
@@ -103,7 +103,7 @@ The skills handle discovery (`/api/v1/accounts`, `/api/v1/brands`), research (`/
 
 ## How it works
 
-The skills are plain Markdown instructions — no binaries, no dependencies beyond `curl`/`jq`. They teach your agent PostPal's [v1 API](https://postpal.live/api/v1/openapi): Bearer-key auth, the research endpoints, and the content lifecycle. Your Reddit OAuth tokens stay in PostPal; agents only ever hold the PostPal API key, which you can revoke any time from the dashboard.
+The skills are plain Markdown instructions — no binaries, no dependencies beyond `curl`/`jq`. They teach your agent PostPal's [v1 API](https://www.postpal.live/api/v1/openapi): Bearer-key auth, the research endpoints, and the content lifecycle. Your Reddit OAuth tokens stay in PostPal; agents only ever hold the PostPal API key, which you can revoke any time from the dashboard.
 
 The Claude Code plugin additionally registers PostPal's MCP server ([`@postpal/cli`](https://www.npmjs.com/package/@postpal/cli)) so the same capabilities are exposed as structured tools rather than curl recipes — the skills then guide the workflow while the MCP tools do the calls.
 

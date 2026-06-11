@@ -29,7 +29,7 @@ Do not call any PostPal endpoint (except the auth flow itself) until this check 
 **1. Resolve credentials** (first match wins):
 
 ```bash
-BASE="${POSTPAL_API_BASE_URL:-https://postpal.live}"
+BASE="${POSTPAL_API_BASE_URL:-https://www.postpal.live}"
 KEY="${POSTPAL_API_KEY:-$(jq -r '.apiKey // empty' .postpal-agent.json 2>/dev/null)}"
 KEY="${KEY:-$(jq -r '.apiKey // empty' ~/.postpal-agent.json 2>/dev/null)}"
 ```

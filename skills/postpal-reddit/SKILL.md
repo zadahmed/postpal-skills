@@ -30,7 +30,7 @@ Do not call any PostPal endpoint (except the auth flow itself) until this check 
 **1. Resolve credentials** (first match wins):
 
 ```bash
-BASE="${POSTPAL_API_BASE_URL:-https://postpal.live}"
+BASE="${POSTPAL_API_BASE_URL:-https://www.postpal.live}"
 KEY="${POSTPAL_API_KEY:-$(jq -r '.apiKey // empty' .postpal-agent.json 2>/dev/null)}"
 KEY="${KEY:-$(jq -r '.apiKey // empty' ~/.postpal-agent.json 2>/dev/null)}"
 ```
@@ -72,6 +72,8 @@ These are your tools. Call them as needed, then present the *results* as cards p
 | `GET /api/v1/reddit/subreddits/<name>/posts?sort=hot&t=day&limit=25` | Browse posts (`sort`: hot/new/top/rising/controversial; `t`: hour/day/week/month/year/all) |
 | `GET /api/v1/reddit/posts/search?q=<query>&subreddit=<name>&sort=relevance&t=month&limit=25` | Keyword search, global or per-subreddit |
 | `GET /api/v1/reddit/posts/<post_id>/comments?limit=50` | A post plus flattened comment tree |
+| `POST /api/v1/reddit/posts/<post_id>/comments` | Comment on a thread (top-level reply to the post) |
+| `POST /api/v1/reddit/comments/<comment_id>/replies` | Reply to a specific comment (nested reply) |
 
 Typical research flow: search subreddits → browse/search posts in the best matches → pull comments on the most relevant posts → then summarize themes, pain points, language, and posting norms for the user **as prose**, with a short ranked list of where they could add value.
 
@@ -110,6 +112,19 @@ Content-Type: application/json
 
 The API enforces content validation, hourly limits, subreddit cooldowns, and duplicate-thread checks. Never set `confirmed` to true based on a general instruction to build karma or engage automatically. After it posts, confirm in one line with the live link.
 
+### Reply to a specific comment
+
+To respond to *someone's comment* inside a thread (a nested reply) rather than the post itself, use the comment's own `id` (the base36 `id` field from the comment tree) as the parent:
+
+```http
+POST /api/v1/reddit/comments/<comment_id>/replies
+Content-Type: application/json
+
+{ "text": "The exact approved reply", "confirmed": true, "brand_id": "optional-brand-id" }
+```
+
+Same approval contract as above — show the verbatim parent comment and your verbatim reply, get an explicit yes, then call it. The response echoes `replied_to` (the parent comment's author and subreddit) and a live `permalink`. This path validates content and counts toward the monthly engagement limit, but does not apply the drip subreddit/thread cooldowns — so it's safe to reply to more than one comment in a conversation the user is actively driving.
+
 ## Content: generate, draft, schedule, publish
 
 Drive this as a conversation — pick identity, generate, **show the draft as readable copy**, then confirm before any schedule/publish. Never show the user run IDs or draft IDs; refer to drafts by their content ("the r/startups launch post").
@@ -136,7 +151,7 @@ Full API schema: `GET /api/v1/openapi`.
 
 ## MCP alternative
 
-If the PostPal MCP server is configured (e.g. via the `postpal` Claude Code plugin, or `postpal mcp serve` / `npx -y @postpal/cli mcp serve`), the same capabilities exist as tools — call `auth_status` first (it performs Step 0's verification, including `reddit_connected`), then use `reddit_search_subreddits`, `reddit_subreddit_info`, `reddit_browse_posts`, `reddit_search_posts`, `reddit_post_comments`, and, only after exact user approval, `reddit_post_comment`. Prefer MCP tools when configured; otherwise use curl as above. The presentation contract applies identically — the tools return JSON, **you** turn it into cards and choices.
+If the PostPal MCP server is configured (e.g. via the `postpal` Claude Code plugin, or `postpal mcp serve` / `npx -y @postpal/cli mcp serve`), the same capabilities exist as tools — call `auth_status` first (it performs Step 0's verification, including `reddit_connected`), then use `reddit_search_subreddits`, `reddit_subreddit_info`, `reddit_browse_posts`, `reddit_search_posts`, `reddit_post_comments`, and, only after exact user approval, `reddit_post_comment` (top-level comment on a post) or `reddit_comment_reply` (nested reply to a specific comment). Prefer MCP tools when configured; otherwise use curl as above. The presentation contract applies identically — the tools return JSON, **you** turn it into cards and choices.
 
 ## Rules
 
