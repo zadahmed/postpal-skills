@@ -75,6 +75,12 @@ These are your tools. Call them as needed, then present the *results* as cards p
 | `POST /api/v1/reddit/posts/<post_id>/comments` | Comment on a thread (top-level reply to the post) |
 | `POST /api/v1/reddit/comments/<comment_id>/replies` | Reply to a specific comment (nested reply) |
 
+Choose the write operation by what the user is replying to:
+
+- Replying to the original post: use `reddit_post_comment`, a post `id`, and the post-comments endpoint.
+- Replying to another user's comment: use `reddit_comment_reply`, that comment's `id`, and the comment-replies endpoint.
+- Both requests require `{ "account_id": "...", "text": "...", "confirmed": true }`. Select the intended connected Reddit account explicitly; never omit it or silently fall back to another account. Do not send `body`.
+
 Typical research flow: search subreddits → browse/search posts in the best matches → pull comments on the most relevant posts → then summarize themes, pain points, language, and posting norms for the user **as prose**, with a short ranked list of where they could add value.
 
 ## Find worthwhile comment opportunities
@@ -107,7 +113,7 @@ Only after an explicit yes, call:
 POST /api/v1/reddit/posts/<post_id>/comments
 Content-Type: application/json
 
-{ "text": "The exact approved comment", "confirmed": true, "brand_id": "optional-brand-id" }
+{ "account_id": "required-reddit-account-id", "text": "The exact approved comment", "confirmed": true, "brand_id": "optional-brand-id" }
 ```
 
 The API enforces content validation, hourly limits, subreddit cooldowns, and duplicate-thread checks. Never set `confirmed` to true based on a general instruction to build karma or engage automatically. After it posts, confirm in one line with the live link.
@@ -120,7 +126,7 @@ To respond to *someone's comment* inside a thread (a nested reply) rather than t
 POST /api/v1/reddit/comments/<comment_id>/replies
 Content-Type: application/json
 
-{ "text": "The exact approved reply", "confirmed": true, "brand_id": "optional-brand-id" }
+{ "account_id": "required-reddit-account-id", "text": "The exact approved reply", "confirmed": true, "brand_id": "optional-brand-id" }
 ```
 
 Same approval contract as above — show the verbatim parent comment and your verbatim reply, get an explicit yes, then call it. The response echoes `replied_to` (the parent comment's author and subreddit) and a live `permalink`. This path validates content and counts toward the monthly engagement limit, but does not apply the drip subreddit/thread cooldowns — so it's safe to reply to more than one comment in a conversation the user is actively driving.
