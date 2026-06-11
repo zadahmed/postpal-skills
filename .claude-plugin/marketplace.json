@@ -9,8 +9,8 @@
     {
       "name": "postpal",
       "source": "./",
-      "description": "Use your PostPal account from Claude Code: research Reddit (subreddits, posts, comments) through your connected Reddit account, generate content in your brand voice, and schedule or publish posts to your connected social platforms.",
-      "version": "1.1.0",
+      "description": "Use your PostPal account from Claude Code: find relevant Reddit conversations, draft useful replies, publish approved comments, and create or schedule social content.",
+      "version": "1.2.0",
       "author": {
         "name": "Zahid Ahmed",
         "url": "https://github.com/zadahmed"

@@ -1,6 +1,6 @@
 ---
 name: postpal-reddit
-description: Use PostPal's Reddit integration from any project — authenticate with a PostPal API key, research subreddits/posts/comments via the user's connected Reddit account, generate content, and schedule or publish Reddit posts. Use when the user wants Reddit research, audience/community discovery, or to draft, schedule, or publish Reddit posts through PostPal.
+description: Use PostPal's Reddit integration from any project — authenticate, find relevant conversations, inspect posts and comments, draft useful replies, and publish user-approved comments or posts through the connected Reddit account.
 ---
 
 # PostPal Reddit
@@ -57,6 +57,33 @@ Never print the full API key back to the user; never commit it. Every response i
 
 Typical research flow: search subreddits → browse/search posts in the best matches → pull comments on the most relevant posts → summarize themes, pain points, language, and posting norms for the user.
 
+## Find worthwhile comment opportunities
+
+The goal is authentic participation, not volume. Search using the brand's topics and the problems its team can answer from real experience. Prefer posts that are:
+
+- recent enough that a reply can still help, normally under 48 hours old;
+- directly answerable with specific advice, examples, tradeoffs, or a useful question;
+- not already fully answered by several strong comments;
+- in a community where the account can participate without mentioning its product;
+- unrelated to sensitive personal crises, politics, or topics where the brand lacks expertise.
+
+For each candidate, fetch its comments before recommending it. Present a short ranked list with the post link, age, subreddit, why the account is qualified to help, what is missing from the existing discussion, and a draft reply. Do not recommend commenting merely because a keyword matched.
+
+Write each reply for that thread from scratch. It should address the author's actual question, lead with the useful information, use natural language, and avoid links, calls to action, product mentions, copied templates, invented personal experience, or claims the user has not supplied. A reasonable outcome is often no suitable posts.
+
+## Comment on a post
+
+Publishing a comment requires explicit approval of the exact post and exact comment text:
+
+```http
+POST /api/v1/reddit/posts/<post_id>/comments
+Content-Type: application/json
+
+{ "text": "The exact approved comment", "confirmed": true, "brand_id": "optional-brand-id" }
+```
+
+The API enforces content validation, hourly limits, subreddit cooldowns, and duplicate-thread checks. Never set `confirmed` to true based on a general instruction to build karma or engage automatically. Show the draft and target first, then wait for explicit approval of that exact pair.
+
 ## Content: generate, draft, schedule, publish
 
 1. **List brands/pals** to pick identity: `GET /api/v1/brands`, `GET /api/v1/pals`
@@ -80,11 +107,12 @@ Full API schema: `GET /api/v1/openapi`.
 
 ## MCP alternative
 
-If the PostPal MCP server is configured (e.g. via the `postpal` Claude Code plugin, or `postpal mcp serve` / `npx -y @postpal/cli mcp serve`), the same capabilities exist as tools — call `auth_status` first (it performs Step 0's verification, including `reddit_connected`), then use `reddit_search_subreddits`, `reddit_subreddit_info`, `reddit_browse_posts`, `reddit_search_posts`, `reddit_post_comments`, plus the content/draft/schedule/publish tools. Prefer MCP tools when configured; otherwise use curl as above.
+If the PostPal MCP server is configured (e.g. via the `postpal` Claude Code plugin, or `postpal mcp serve` / `npx -y @postpal/cli mcp serve`), the same capabilities exist as tools — call `auth_status` first (it performs Step 0's verification, including `reddit_connected`), then use `reddit_search_subreddits`, `reddit_subreddit_info`, `reddit_browse_posts`, `reddit_search_posts`, `reddit_post_comments`, and, only after exact user approval, `reddit_post_comment`. Prefer MCP tools when configured; otherwise use curl as above.
 
 ## Rules
 
-- Research freely, but **never publish or schedule without the user explicitly confirming** the subreddit, title, body, and timing.
+- Research freely, but **never publish or schedule without the user explicitly confirming** the target and exact content. A standing request to build karma is not publication approval.
+- Never optimize for comment count or promise karma. Optimize for relevance and usefulness, vary timing naturally, and accept that skipping a thread is often correct.
 - Validate the subreddit exists (`GET /api/v1/reddit/subreddits/<name>`) before scheduling/publishing to it.
 - Respect community norms: when researching, check the subreddit's description and pinned conventions before recommending a post; flag if the target subreddit looks hostile to promotional content.
 - Quote `request_id` from error responses when reporting failures to the user.
