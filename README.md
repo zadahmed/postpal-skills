@@ -56,9 +56,17 @@ cd postpal-skills
 - **Codex**: copy `skills/<name>/` into `~/.codex/skills/<name>/` or `<project>/.codex/skills/<name>/`
 - **Cursor**: add the SKILL.md body as a rule in `<project>/.cursor/rules/<name>.mdc` (the installer does this conversion for you)
 
-## Configure credentials
+## Connect your account
 
-Set your API key where the agent runs — environment variable (recommended):
+**Easiest: browser login (device OAuth).** Run this once — it opens PostPal in your browser, you click Approve, and credentials are saved to `~/.postpal-agent.json`:
+
+```bash
+npx -y @postpal/cli auth login
+```
+
+You can also just ask your agent to "connect to my PostPal account" — the skills know how to start this flow and will wait while you approve in the browser. Check the connection any time with `npx -y @postpal/cli auth status`.
+
+**Alternative: manual API key.** Create a key in the PostPal dashboard (Settings → API Keys) and either export it where the agent runs:
 
 ```bash
 export POSTPAL_API_KEY=ppk_live_...
@@ -66,11 +74,13 @@ export POSTPAL_API_KEY=ppk_live_...
 export POSTPAL_API_BASE_URL=https://postpal.live
 ```
 
-or a `.postpal-agent.json` in the project root (add it to `.gitignore`):
+or put it in `.postpal-agent.json` in the project root (add it to `.gitignore`):
 
 ```json
 { "apiKey": "ppk_live_...", "apiBaseUrl": "https://postpal.live" }
 ```
+
+Either way, the skills always verify the connection (`GET /api/v1/me`) before doing any work, and the Reddit skill additionally requires your Reddit account to be connected in PostPal (Settings → Social Accounts) before it will touch any Reddit endpoint.
 
 ## Try it
 

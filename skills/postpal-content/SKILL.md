@@ -7,22 +7,37 @@ description: Generate, draft, schedule, and publish social media content through
 
 This skill lets any agent (Claude Code, Codex, etc.) act on the user's PostPal account: generate platform-specific content with their brand voice, save drafts, and schedule or publish posts to their connected social accounts.
 
-## Authentication
+## Step 0 — Connect before anything else (REQUIRED)
 
-All requests go to the PostPal v1 API with a Bearer API key:
+Do not call any PostPal endpoint (except the auth flow itself) until this check passes.
 
-- Base URL: `$POSTPAL_API_BASE_URL` if set, otherwise `https://postpal.live`
-- API key: `$POSTPAL_API_KEY`, or the `apiKey` field of `.postpal-agent.json` in the project root
+**1. Resolve credentials** (first match wins):
 
 ```bash
 BASE="${POSTPAL_API_BASE_URL:-https://postpal.live}"
 KEY="${POSTPAL_API_KEY:-$(jq -r '.apiKey // empty' .postpal-agent.json 2>/dev/null)}"
-curl -sS -H "Authorization: Bearer $KEY" "$BASE/api/v1/health"
+KEY="${KEY:-$(jq -r '.apiKey // empty' ~/.postpal-agent.json 2>/dev/null)}"
 ```
 
-If no key is found, ask the user for one. They can create a key in the PostPal dashboard (Settings → API Keys) — keys look like `ppk_live_...` and are available on every plan. Never print the full key back to the user; never commit it.
+**2. Verify the account:**
 
-Every response is `{ "data": ..., "meta": { "request_id": ... } }` or `{ "error": { "code", "message" } }`.
+```bash
+curl -sS -H "Authorization: Bearer $KEY" "$BASE/api/v1/me"
+```
+
+A 200 returns `{ "data": { "email", "plan", "connected_platforms", "reddit_connected" } }`. Tell the user which account you're connected as, and only target platforms that appear in `connected_platforms`.
+
+**3. If there is no key or `/me` returns 401 — run the browser login (device OAuth):**
+
+```bash
+npx -y @postpal/cli auth login
+```
+
+This prints a pairing code, opens the user's browser at PostPal's approve page (`/connect/device`), and waits while they sign in and click **Approve**. Credentials are then saved to `~/.postpal-agent.json` automatically. The command is interactive — run it in the foreground, tell the user to complete the approval in the browser, and wait for it to finish. Then re-run step 2.
+
+If the PostPal MCP server is configured (e.g. via the `postpal` Claude Code plugin), call the `auth_status` tool first instead — it performs the same verification.
+
+Never print the full API key back to the user; never commit it. Every response is `{ "data": ..., "meta": { "request_id": ... } }` or `{ "error": { "code", "message" } }`.
 
 ## Workflow
 

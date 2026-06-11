@@ -7,32 +7,43 @@ description: Use PostPal's Reddit integration from any project — authenticate 
 
 This skill lets any agent (Claude Code, Codex, etc.) act on the user's PostPal account: research Reddit through their connected Reddit account, then draft, schedule, or publish posts.
 
-## Authentication
+## Step 0 — Connect before anything else (REQUIRED)
 
-All requests go to the PostPal v1 API with a Bearer API key:
+Do not call any PostPal endpoint (except the auth flow itself) until this check passes.
 
-- Base URL: `$POSTPAL_API_BASE_URL` if set, otherwise `https://postpal.live`
-- API key: `$POSTPAL_API_KEY`, or the `apiKey` field of `.postpal-agent.json` in the project root
+**1. Resolve credentials** (first match wins):
 
 ```bash
 BASE="${POSTPAL_API_BASE_URL:-https://postpal.live}"
 KEY="${POSTPAL_API_KEY:-$(jq -r '.apiKey // empty' .postpal-agent.json 2>/dev/null)}"
-curl -sS -H "Authorization: Bearer $KEY" "$BASE/api/v1/health"
+KEY="${KEY:-$(jq -r '.apiKey // empty' ~/.postpal-agent.json 2>/dev/null)}"
 ```
 
-If no key is found, ask the user for one. They can create a key in the PostPal dashboard (Settings → API Keys) — keys look like `ppk_live_...`. Never print the full key back to the user; never commit it.
+**2. Verify the account:**
 
-Every response is `{ "data": ..., "meta": { "request_id": ... } }` or `{ "error": { "code", "message" } }`. If you get `reddit_not_connected` (409), tell the user to connect Reddit in the PostPal dashboard (Settings → Social Accounts) and stop.
+```bash
+curl -sS -H "Authorization: Bearer $KEY" "$BASE/api/v1/me"
+```
 
-## Verify the connection first
+A 200 returns `{ "data": { "email", "plan", "connected_platforms", "reddit_connected" } }`. Tell the user which account you're connected as before doing anything else.
 
-Before any Reddit work, confirm a Reddit account is connected:
+**3. If there is no key or `/me` returns 401 — run the browser login (device OAuth):**
+
+```bash
+npx -y @postpal/cli auth login
+```
+
+This prints a pairing code, opens the user's browser at PostPal's approve page (`/connect/device`), and waits while they sign in and click **Approve**. Credentials are then saved to `~/.postpal-agent.json` automatically. The command is interactive — run it in the foreground, tell the user to complete the approval in the browser, and wait for it to finish. Then re-run step 2.
+
+**4. Require a Reddit connection** — this skill must not call any `/api/v1/reddit/*` endpoint unless `reddit_connected` is `true` in `/me`. If it's `false`, tell the user: *"Connect Reddit in PostPal → Settings → Social Accounts, then ask me again"* — and stop.
+
+When publishing you'll also need the Reddit `account_id`:
 
 ```bash
 curl -sS -H "Authorization: Bearer $KEY" "$BASE/api/v1/accounts?platform=reddit"
 ```
 
-Note the `id` of the Reddit account — it is required for publishing (`account_id`).
+Never print the full API key back to the user; never commit it. Every response is `{ "data": ..., "meta": { "request_id": ... } }` or `{ "error": { "code", "message" } }`. A `reddit_not_connected` (409) error at any point means step 4 was skipped — go back to it.
 
 ## Research endpoints (read-only, safe to use freely)
 
@@ -69,7 +80,7 @@ Full API schema: `GET /api/v1/openapi`.
 
 ## MCP alternative
 
-If the project has the PostPal CLI available (PostPal repo, or `postpal` on PATH), the same capabilities exist as MCP tools via `postpal mcp serve` — including `reddit_search_subreddits`, `reddit_subreddit_info`, `reddit_browse_posts`, `reddit_search_posts`, `reddit_post_comments`, plus the content/draft/schedule/publish tools. Prefer MCP tools when configured; otherwise use curl as above.
+If the PostPal MCP server is configured (e.g. via the `postpal` Claude Code plugin, or `postpal mcp serve` / `npx -y @postpal/cli mcp serve`), the same capabilities exist as tools — call `auth_status` first (it performs Step 0's verification, including `reddit_connected`), then use `reddit_search_subreddits`, `reddit_subreddit_info`, `reddit_browse_posts`, `reddit_search_posts`, `reddit_post_comments`, plus the content/draft/schedule/publish tools. Prefer MCP tools when configured; otherwise use curl as above.
 
 ## Rules
 
