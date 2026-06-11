@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "postpal": {
+      "command": "npx",
+      "args": ["-y", "@postpal/cli", "mcp", "serve"],
+      "env": {
+        "POSTPAL_API_KEY": "${POSTPAL_API_KEY}",
+        "POSTPAL_API_BASE_URL": "${POSTPAL_API_BASE_URL:-https://postpal.live}"
+      }
+    }
+  }
+}

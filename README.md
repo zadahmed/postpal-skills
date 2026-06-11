@@ -1,6 +1,6 @@
-# PostPal Skills
+# PostPal Skills & Plugin
 
-Agent skills that connect [PostPal](https://postpal.live) — the AI social media content platform — to your coding agents. Install them once and any project's agent (Claude Code, Codex, Cursor) can use your PostPal account to:
+A Claude Code plugin and portable agent skills that connect [PostPal](https://postpal.live) — the AI social media content platform — to your coding agents. Install once and any project's agent (Claude Code, Codex, Cursor) can use your PostPal account to:
 
 - 🔎 **Research Reddit** — find subreddits, browse and search posts, read comment threads through your connected Reddit account
 - ✍️ **Generate content** — platform-specific posts in your brand voice (Twitter/X, LinkedIn, Facebook, Reddit, and more)
@@ -21,15 +21,28 @@ Agent skills that connect [PostPal](https://postpal.live) — the AI social medi
 
 ## Install
 
-### One-liner (Claude Code + Codex, user-level)
+| Tool | Recommended install |
+|---|---|
+| **Claude Code** | Plugin (below) — includes both skills **plus** the PostPal MCP server |
+| **Codex** | `install.sh` — copies skills to `~/.codex/skills` |
+| **Cursor** | `install.sh --project <dir>` — converts skills to `.cursor/rules/*.mdc` |
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/zadahmed/postpal-skills/main/install.sh | bash
+### Claude Code (plugin — recommended)
+
+```
+/plugin marketplace add zadahmed/postpal-skills
+/plugin install postpal@postpal-skills
 ```
 
-### From a clone
+The plugin bundles the `postpal-reddit` and `postpal-content` skills and registers the PostPal MCP server (`npx @postpal/cli mcp serve`), giving the agent first-class tools — `reddit_search_subreddits`, `reddit_browse_posts`, `reddit_post_comments`, `content_generate`, `schedules_create`, `publishes_create`, and more. Set `POSTPAL_API_KEY` in your environment before starting Claude Code.
+
+### Codex / Cursor (skills)
 
 ```bash
+# One-liner (user-level: ~/.claude/skills + ~/.codex/skills)
+curl -fsSL https://raw.githubusercontent.com/zadahmed/postpal-skills/main/install.sh | bash
+
+# From a clone
 git clone https://github.com/zadahmed/postpal-skills.git
 cd postpal-skills
 ./install.sh                          # user-level: ~/.claude/skills + ~/.codex/skills
@@ -39,7 +52,7 @@ cd postpal-skills
 
 ### Manual
 
-- **Claude Code**: copy `skills/<name>/` into `~/.claude/skills/<name>/` (all projects) or `<project>/.claude/skills/<name>/`
+- **Claude Code**: prefer the plugin; or copy `skills/<name>/` into `~/.claude/skills/<name>/`
 - **Codex**: copy `skills/<name>/` into `~/.codex/skills/<name>/` or `<project>/.codex/skills/<name>/`
 - **Cursor**: add the SKILL.md body as a rule in `<project>/.cursor/rules/<name>.mdc` (the installer does this conversion for you)
 
@@ -71,7 +84,7 @@ The skills handle discovery (`/api/v1/accounts`, `/api/v1/brands`), research (`/
 
 The skills are plain Markdown instructions — no binaries, no dependencies beyond `curl`/`jq`. They teach your agent PostPal's [v1 API](https://postpal.live/api/v1/openapi): Bearer-key auth, the research endpoints, and the content lifecycle. Your Reddit OAuth tokens stay in PostPal; agents only ever hold the PostPal API key, which you can revoke any time from the dashboard.
 
-Prefer MCP? PostPal also ships an MCP server (`postpal mcp serve` via [`@postpal/cli`](https://postpal.live/docs)) exposing the same capabilities as tools.
+The Claude Code plugin additionally registers PostPal's MCP server ([`@postpal/cli`](https://www.npmjs.com/package/@postpal/cli)) so the same capabilities are exposed as structured tools rather than curl recipes — the skills then guide the workflow while the MCP tools do the calls.
 
 ## Safety
 
