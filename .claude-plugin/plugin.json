@@ -1,7 +1,7 @@
 {
   "name": "postpal",
   "description": "Use your PostPal account from Claude Code: find relevant Reddit conversations, draft useful replies, publish approved comments, and create or schedule social content.",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "author": {
     "name": "Zahid Ahmed",
     "url": "https://github.com/zadahmed"

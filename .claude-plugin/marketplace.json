@@ -1,6 +1,6 @@
 {
   "name": "postpal-skills",
-  "description": "PostPal plugin and skills for AI coding agents \u2014 Reddit research, content generation, and social post scheduling/publishing through your PostPal account.",
+  "description": "PostPal plugin and skills for AI coding agents — Reddit research, content generation, and social post scheduling/publishing through your PostPal account.",
   "owner": {
     "name": "Zahid Ahmed",
     "url": "https://github.com/zadahmed"
@@ -10,7 +10,7 @@
       "name": "postpal",
       "source": "./",
       "description": "Use your PostPal account from Claude Code: find relevant Reddit conversations, draft useful replies, publish approved comments, and create or schedule social content.",
-      "version": "1.2.0",
+      "version": "1.3.0",
       "author": {
         "name": "Zahid Ahmed",
         "url": "https://github.com/zadahmed"

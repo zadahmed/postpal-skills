@@ -82,9 +82,20 @@ or put it in `.postpal-agent.json` in the project root (add it to `.gitignore`):
 
 Either way, the skills always verify the connection (`GET /api/v1/me`) before doing any work, and the Reddit skill additionally requires your Reddit account to be connected in PostPal (Settings → Social Accounts) before it will touch any Reddit endpoint.
 
+## Commands (Claude Code)
+
+The plugin adds guided slash commands so you don't have to remember anything — each one runs a conversational flow that shows readable results and asks before it posts:
+
+| Command | What it does |
+|---|---|
+| `/postpal:connect` | Connect and show which account, plan, and platforms are linked |
+| `/postpal:reddit-research [topic]` | Find relevant Reddit threads worth joining, as a ranked list with draft replies |
+| `/postpal:reddit-reply [link or context]` | Draft a reply to a specific thread, preview it, and post after you approve |
+| `/postpal:post [topic]` | Generate content in your brand voice, then schedule or publish after you confirm |
+
 ## Try it
 
-Ask your agent:
+Or just talk to your agent:
 
 > research r/SaaS and r/indiehackers for pain points around social scheduling tools, then draft a Reddit post introducing our product and schedule it for Friday 9am
 
